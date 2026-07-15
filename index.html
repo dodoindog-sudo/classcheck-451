@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>เช็คชื่อเข้าเรียน 01003451 สรีรวิทยาการผลิตพืชไร่</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="card" id="courseHeader"></div>
+
+  <div id="clock"></div>
+
+  <div class="card" id="sessionInfo" hidden></div>
+
+  <div class="card notice" id="noSession" hidden>
+    วันนี้ไม่มีชั้นเรียนตามตารางเรียนของรายวิชานี้
+  </div>
+
+  <div class="card" id="gpsSection" hidden>
+    <label>ขั้นตอนที่ 1: ตรวจสอบตำแหน่งของคุณ</label>
+    <button id="gpsBtn">📍 ตรวจสอบตำแหน่ง GPS</button>
+    <div id="gpsStatus"></div>
+  </div>
+
+  <div class="card" id="formSection" hidden>
+    <label for="studentId">ขั้นตอนที่ 2: กรอกรหัสนิสิต (10 หลัก)</label>
+    <input type="text" id="studentId" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="เช่น 6610100XXX" autocomplete="off">
+    <button id="submitBtn">เช็คชื่อเข้าเรียน</button>
+  </div>
+
+  <div class="card result-box" id="resultBox" hidden></div>
+
+  <p class="footer-note">
+    ระบบตรวจสอบตำแหน่ง GPS และจำกัดการเช็คชื่อ 1 ครั้ง/อุปกรณ์/วันเรียน<br>
+    ต้องอยู่ภายในคณะเกษตร มหาวิทยาลัยเกษตรศาสตร์ บางเขน จึงจะเช็คชื่อได้
+  </p>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

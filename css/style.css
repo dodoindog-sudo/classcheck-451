@@ -1,0 +1,177 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Sarabun", "Kanit", system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, #eef7ee 0%, #f7faf5 100%);
+  color: #1f2a1f;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+#courseHeader h1 {
+  margin: 0 0 6px;
+  font-size: 1.4rem;
+  color: #1b5e20;
+}
+
+.course-name {
+  margin: 0;
+  font-weight: 600;
+}
+
+.course-name-en {
+  margin: 2px 0 10px;
+  color: #55665a;
+  font-size: 0.9rem;
+}
+
+.course-place {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #55665a;
+}
+
+#clock {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #55665a;
+  margin-bottom: 12px;
+}
+
+.session-card {
+  background: #f1f8f1;
+  border: 1px solid #cfe8cf;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.session-week {
+  font-weight: 700;
+  color: #1b5e20;
+  margin-bottom: 4px;
+}
+
+.session-topic {
+  margin-bottom: 4px;
+}
+
+.session-instructor {
+  font-size: 0.85rem;
+  color: #55665a;
+}
+
+.notice {
+  text-align: center;
+  padding: 14px;
+  border-radius: 12px;
+  background: #fff7e6;
+  border: 1px solid #ffe0a3;
+  color: #7a5b00;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#gpsBtn {
+  background: #2e7d32;
+  color: #fff;
+}
+
+#submitBtn {
+  background: #1565c0;
+  color: #fff;
+  margin-top: 12px;
+}
+
+.gps-status {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.gps-status.pending {
+  background: #eeeeee;
+  color: #555;
+}
+
+.gps-status.ok {
+  background: #e6f4ea;
+  color: #1b5e20;
+}
+
+.gps-status.error {
+  background: #fdecea;
+  color: #a12622;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  border: 1px solid #cfd8cf;
+  letter-spacing: 1px;
+}
+
+.result-box {
+  text-align: center;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.result-box.success {
+  background: #e6f4ea;
+  color: #1b5e20;
+}
+
+.result-box.error {
+  background: #fdecea;
+  color: #a12622;
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #8a978a;
+  margin-top: 8px;
+}

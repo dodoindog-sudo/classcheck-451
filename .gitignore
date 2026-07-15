@@ -1,0 +1,6 @@
+roster*.csv
+roster*.xlsx
+*.local.js
+.DS_Store
+Thumbs.db
+.claude/
