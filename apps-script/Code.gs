@@ -7,17 +7,23 @@
  *    แล้ววางรายชื่อนิสิตทั้งหมดที่นี่ (ห้ามใส่ในโค้ด/GitHub เพราะเป็นข้อมูลส่วนบุคคล)
  * 3. สร้างชีตชื่อ "Attendance" ไว้เปล่า ๆ (สคริปต์จะสร้างหัวตารางให้อัตโนมัติ)
  * 4. เมนู Extensions > Apps Script วางโค้ดนี้ทับ แล้วแก้ API_TOKEN ให้ตรงกับ js/config.js
- *    และตั้ง ADMIN_TOKEN เป็นรหัสผ่านของอาจารย์เอง (ห้ามใช้ค่าเดียวกับ API_TOKEN)
- * 5. Deploy > New deployment > Web app > Execute as: Me, Who has access: Anyone
- * 6. คัดลอก URL ที่ได้ไปใส่ใน js/config.js -> APPS_SCRIPT_URL
+ * 5. ตั้งรหัสผ่านหน้า admin.html: เมนูรูปเฟือง "Project Settings" ทางซ้าย > เลื่อนลงไปที่
+ *    "Script Properties" > Add script property > Property = ADMIN_TOKEN, Value = รหัสผ่านของอาจารย์เอง
+ *    (ห้ามพิมพ์รหัสผ่านลงในไฟล์นี้โดยตรง เพราะไฟล์นี้จะถูก push ขึ้น GitHub แบบ public
+ *    ใครก็เปิดดูได้ — Script Properties เก็บแยกไว้ในบัญชี Google ของอาจารย์เท่านั้น ไม่ติดไปกับโค้ด)
+ * 6. Deploy > New deployment > Web app > Execute as: Me, Who has access: Anyone
+ * 7. คัดลอก URL ที่ได้ไปใส่ใน js/config.js -> APPS_SCRIPT_URL
  *
  * หมายเหตุด้านความปลอดภัยของหน้า admin.html: เว็บนี้เป็น static site ไม่มีระบบล็อกอินจริง
  * ADMIN_TOKEN เป็นเพียงการกันคนทั่วไปเข้าถึงโดยไม่ตั้งใจ ไม่ใช่การยืนยันตัวตนระดับสูง
- * ห้ามใช้รหัสผ่านเดียวกับบัญชีอื่น และเปลี่ยนได้ตลอดโดยแก้ค่านี้แล้ว Deploy ใหม่
+ * ห้ามใช้รหัสผ่านเดียวกับบัญชีอื่น และเปลี่ยนได้ตลอดโดยแก้ค่าใน Script Properties (ไม่ต้อง Deploy ใหม่)
  */
 
 const API_TOKEN = "kaset-crop451-2569"; // ต้องตรงกับ CONFIG.API_TOKEN ใน js/config.js
-const ADMIN_TOKEN = "CHANGE_ME_ADMIN_PASSWORD"; // รหัสผ่านหน้า admin.html ตั้งเองให้คาดเดายาก
+
+// อ่านรหัสผ่าน admin จาก Script Properties เท่านั้น (ไม่ฝังไว้ในไฟล์นี้ เพราะไฟล์นี้ push ขึ้น GitHub แบบ public)
+// ถ้ายังไม่ได้ตั้งค่า จะปิดหน้า admin ไว้ก่อนโดยอัตโนมัติ (ไม่มีรหัสผ่านใดเข้าได้)
+const ADMIN_TOKEN = PropertiesService.getScriptProperties().getProperty("ADMIN_TOKEN");
 const TIMEZONE = "Asia/Bangkok";
 const ROSTER_SHEET = "Roster";
 const ATTENDANCE_SHEET = "Attendance";
@@ -158,6 +164,9 @@ function doGet(e) {
 
   const action = e.parameter.action;
   if (action === "admin") {
+    if (!ADMIN_TOKEN) {
+      return out({ status: "error", message: "ยังไม่ได้ตั้งรหัสผ่าน admin (ตั้งค่า ADMIN_TOKEN ใน Script Properties ก่อน)" });
+    }
     if (e.parameter.token !== ADMIN_TOKEN) {
       return out({ status: "error", message: "รหัสผ่านไม่ถูกต้อง" });
     }
