@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Admin - เช็คชื่อ 01003451</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="container wide">
+  <div class="card">
+    <h1 class="admin-title">สรุปผลการเช็คชื่อ (สำหรับอาจารย์)</h1>
+    <p class="course-name">01003451 สรีรวิทยาการผลิตพืชไร่</p>
+  </div>
+
+  <div class="card" id="loginCard">
+    <label for="pwd">รหัสผ่านผู้ดูแล (ADMIN_TOKEN)</label>
+    <input type="password" id="pwd" autocomplete="off" placeholder="กรอกรหัสผ่าน">
+    <button id="loginBtn">เข้าสู่ระบบ</button>
+    <div id="loginMsg" class="result-box" hidden></div>
+    <p class="footer-note">รหัสผ่านนี้ไม่ถูกบันทึกไว้ในเบราว์เซอร์ ต้องกรอกใหม่ทุกครั้งที่เปิดหน้านี้ เพื่อความปลอดภัยบนเครื่องที่ใช้ร่วมกัน</p>
+  </div>
+
+  <div id="dashboard" hidden>
+    <div class="card" id="summaryCard"></div>
+    <div class="card">
+      <div class="admin-toolbar">
+        <button id="exportBtn">ดาวน์โหลด CSV</button>
+        <button id="logoutBtn" class="secondary">ออกจากระบบ</button>
+      </div>
+      <div class="table-scroll">
+        <table id="attTable"></table>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">
+    <a href="index.html">← กลับหน้าเช็คชื่อ</a>
+  </p>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

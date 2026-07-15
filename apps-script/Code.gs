@@ -7,11 +7,17 @@
  *    แล้ววางรายชื่อนิสิตทั้งหมดที่นี่ (ห้ามใส่ในโค้ด/GitHub เพราะเป็นข้อมูลส่วนบุคคล)
  * 3. สร้างชีตชื่อ "Attendance" ไว้เปล่า ๆ (สคริปต์จะสร้างหัวตารางให้อัตโนมัติ)
  * 4. เมนู Extensions > Apps Script วางโค้ดนี้ทับ แล้วแก้ API_TOKEN ให้ตรงกับ js/config.js
+ *    และตั้ง ADMIN_TOKEN เป็นรหัสผ่านของอาจารย์เอง (ห้ามใช้ค่าเดียวกับ API_TOKEN)
  * 5. Deploy > New deployment > Web app > Execute as: Me, Who has access: Anyone
  * 6. คัดลอก URL ที่ได้ไปใส่ใน js/config.js -> APPS_SCRIPT_URL
+ *
+ * หมายเหตุด้านความปลอดภัยของหน้า admin.html: เว็บนี้เป็น static site ไม่มีระบบล็อกอินจริง
+ * ADMIN_TOKEN เป็นเพียงการกันคนทั่วไปเข้าถึงโดยไม่ตั้งใจ ไม่ใช่การยืนยันตัวตนระดับสูง
+ * ห้ามใช้รหัสผ่านเดียวกับบัญชีอื่น และเปลี่ยนได้ตลอดโดยแก้ค่านี้แล้ว Deploy ใหม่
  */
 
 const API_TOKEN = "kaset-crop451-2569"; // ต้องตรงกับ CONFIG.API_TOKEN ใน js/config.js
+const ADMIN_TOKEN = "CHANGE_ME_ADMIN_PASSWORD"; // รหัสผ่านหน้า admin.html ตั้งเองให้คาดเดายาก
 const TIMEZONE = "Asia/Bangkok";
 const ROSTER_SHEET = "Roster";
 const ATTENDANCE_SHEET = "Attendance";
@@ -148,5 +154,39 @@ function haversineMeters(lat1, lng1, lat2, lng2) {
 }
 
 function doGet(e) {
+  const out = (obj) => ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+
+  const action = e.parameter.action;
+  if (action === "admin") {
+    if (e.parameter.token !== ADMIN_TOKEN) {
+      return out({ status: "error", message: "รหัสผ่านไม่ถูกต้อง" });
+    }
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const rosterSheet = ss.getSheetByName(ROSTER_SHEET);
+    const attSheet = ss.getSheetByName(ATTENDANCE_SHEET);
+
+    const roster = rosterSheet
+      ? rosterSheet.getDataRange().getValues().slice(1)
+          .filter((r) => r[0])
+          .map((r) => ({ id: String(r[0]).trim(), name: r[1] }))
+      : [];
+
+    const attendance = attSheet
+      ? attSheet.getDataRange().getValues().slice(1)
+          .filter((r) => r[1])
+          .map((r) => ({
+            timestamp: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
+            date: r[1],
+            studentId: String(r[2]).trim(),
+            name: r[3],
+            deviceId: r[4],
+            distance: r[8],
+          }))
+      : [];
+
+    return out({ status: "ok", roster, attendance });
+  }
+
   return ContentService.createTextOutput("OK - Attendance backend is running").setMimeType(ContentService.MimeType.TEXT);
 }
