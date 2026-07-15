@@ -4,7 +4,7 @@
 const CONFIG = {
   // URL ของ Google Apps Script Web App (ได้จากขั้นตอน Deploy > New deployment)
   // ตัวอย่าง: "https://script.google.com/macros/s/AKfycb.../exec"
-  APPS_SCRIPT_URL: "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE",
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyO3oBTIP5wxN1FLOCRDQhRUx4k6QT4pejfk1KRA_Il3XNXtd1lnzafkAz_1l_LGdoTiw/exec",
 
   // โทเคนลับสั้น ๆ ที่ฝั่ง Apps Script ต้องตรงกัน (กันบอท/การยิง request ตรง ๆ แบบสุ่ม)
   // เปลี่ยนค่านี้ได้ตามใจ แต่ต้องตั้งให้ตรงกับ API_TOKEN ใน Code.gs
