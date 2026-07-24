@@ -38,21 +38,26 @@ const CONFIG = {
 
   // ตารางวันเรียน (เฉพาะวันบรรยายจริงตาม course syllabus ภาคต้น ปีการศึกษา 2569)
   // สัปดาห์ที่งดเรียน (สัปดาห์ 6, 9 สอบกลางภาค, 16 พิธีพระราชทานปริญญาบัตร, 18 สอบปลายภาค) ไม่รวมไว้
+  //
+  // แต่ละคาบมี id เฉพาะ (ห้ามซ้ำ) ใช้เป็นตัวแยกการเช็คชื่อ 1 ครั้ง/คาบ แทนการใช้ "วันที่"
+  // เพราะบางวันอาจมีเรียนมากกว่า 1 คาบ (เช่น 4 ส.ค. มีทั้งสัปดาห์ 7 เช้า และสัปดาห์ 8 บ่าย)
+  // ช่อง start/end/room เป็นค่าเฉพาะคาบ ถ้าไม่ระบุจะใช้ค่ามาตรฐานจาก COURSE (08:00-11:00 ห้อง 206)
   SESSIONS: [
-    { date: "2026-06-23", week: 1, topic: "Course introduction, introduction to physiology of field crop production", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
-    { date: "2026-06-30", week: 2, topic: "Plant cell and crop growth", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
-    { date: "2026-07-07", week: 3, topic: "Crop growth analysis", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
-    { date: "2026-07-14", week: 4, topic: "Plant hormone and crop growth", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
-    { date: "2026-07-21", week: 5, topic: "Light utilization within plant canopy and community", instructor: "รศ. ดร.ปิติพงษ์ โตบันลือภพ" },
-    { date: "2026-08-04", week: 7, topic: "Relation of water and crop growth and yield production", instructor: "รศ. ดร.ปิติพงษ์ โตบันลือภพ" },
-    { date: "2026-08-11", week: 8, topic: "Mineral nutrition", instructor: "ผศ. ดร.อรุณี วงษ์แก้ว" },
-    { date: "2026-08-25", week: 10, topic: "Photosynthesis and respiration", instructor: "รศ. ดร.สุตเขตต์ นาคะเสถียร" },
-    { date: "2026-09-01", week: 11, topic: "Dry matter translocation, partitioning and accumulation", instructor: "รศ. ดร.สุตเขตต์ นาคะเสถียร" },
-    { date: "2026-09-08", week: 12, topic: "Temperature and crop growth", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
-    { date: "2026-09-15", week: 13, topic: "Plant canopy and plant population and community", instructor: "ผศ. ดร.วรรณสิริ วรรณรัตน์" },
-    { date: "2026-09-22", week: 14, topic: "Physiology of flowering", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
-    { date: "2026-09-29", week: 15, topic: "Yield component and application of crop physiology for yield improvement", instructor: "รศ. ดร.ปิติพงษ์ โตบันลือภพ" },
+    { id: "w1", date: "2026-06-23", week: 1, topic: "Course introduction, introduction to physiology of field crop production", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
+    { id: "w2", date: "2026-06-30", week: 2, topic: "Plant cell and crop growth", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
+    { id: "w3", date: "2026-07-07", week: 3, topic: "Crop growth analysis", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
+    { id: "w4", date: "2026-07-14", week: 4, topic: "Plant hormone and crop growth", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
+    { id: "w5", date: "2026-07-21", week: 5, topic: "Light utilization within plant canopy and community", instructor: "รศ. ดร.ปิติพงษ์ โตบันลือภพ" },
+    { id: "w7", date: "2026-08-04", week: 7, topic: "Relation of water and crop growth and yield production", instructor: "รศ. ดร.ปิติพงษ์ โตบันลือภพ" },
+    // สัปดาห์ 8: ย้ายจาก 11 ส.ค. (เช้า ห้อง 206) มาเป็น 4 ส.ค. เวลา 16:00-19:00 ห้องประชุม 3 ตึกพืชไร่ (เฉพาะสัปดาห์นี้)
+    { id: "w8", date: "2026-08-04", week: 8, start: "16:00", end: "19:00", room: "ห้องประชุม 3 ชั้น 2 ตึกพืชไร่", topic: "Mineral nutrition", instructor: "ผศ. ดร.อรุณี วงษ์แก้ว" },
+    { id: "w10", date: "2026-08-25", week: 10, topic: "Photosynthesis and respiration", instructor: "รศ. ดร.สุตเขตต์ นาคะเสถียร" },
+    { id: "w11", date: "2026-09-01", week: 11, topic: "Dry matter translocation, partitioning and accumulation", instructor: "รศ. ดร.สุตเขตต์ นาคะเสถียร" },
+    { id: "w12", date: "2026-09-08", week: 12, topic: "Temperature and crop growth", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
+    { id: "w13", date: "2026-09-15", week: 13, topic: "Plant canopy and plant population and community", instructor: "ผศ. ดร.วรรณสิริ วรรณรัตน์" },
+    { id: "w14", date: "2026-09-22", week: 14, topic: "Physiology of flowering", instructor: "ผศ. ดร.อภิเดช รักเป็นไทย" },
+    { id: "w15", date: "2026-09-29", week: 15, topic: "Yield component and application of crop physiology for yield improvement", instructor: "รศ. ดร.ปิติพงษ์ โตบันลือภพ" },
     // สัปดาห์ 17 (14-16 ต.ค. 69) นำเสนอ Term paper — วันที่แน่นอนแจ้งภายหลัง ปรับวันที่นี้เมื่อทราบวันจริง
-    { date: "2026-10-14", week: 17, topic: "Term paper presentation (วันที่แน่นอนตามที่อาจารย์ประกาศ)", instructor: "คณะผู้สอน" },
+    { id: "w17", date: "2026-10-14", week: 17, topic: "Term paper presentation (วันที่แน่นอนตามที่อาจารย์ประกาศ)", instructor: "คณะผู้สอน" },
   ],
 };

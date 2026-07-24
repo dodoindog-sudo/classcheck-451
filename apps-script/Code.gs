@@ -28,16 +28,30 @@ const TIMEZONE = "Asia/Bangkok";
 const ROSTER_SHEET = "Roster";
 const ATTENDANCE_SHEET = "Attendance";
 
-// ต้องตรงกับ SESSIONS ใน js/config.js (ใช้ตรวจสอบวัน/เวลาฝั่งเซิร์ฟเวอร์ ป้องกันการปลอมวันที่)
-const SESSIONS = [
-  "2026-06-23", "2026-06-30", "2026-07-07", "2026-07-14", "2026-07-21",
-  "2026-08-04", "2026-08-11", "2026-08-25", "2026-09-01", "2026-09-08",
-  "2026-09-15", "2026-09-22", "2026-09-29", "2026-10-14",
-];
+// ต้องตรงกับ SESSIONS ใน js/config.js (ใช้ตรวจสอบคาบ/วัน/เวลาฝั่งเซิร์ฟเวอร์ ป้องกันการปลอมข้อมูล)
+// แต่ละคาบมี id เฉพาะ ใช้เป็นตัวแยกการเช็คชื่อ 1 ครั้ง/คาบ (บางวันมีมากกว่า 1 คาบ)
+// start/end ไม่ระบุ = ใช้ค่ามาตรฐาน 08:00-11:00
 const CLASS_START = "08:00";
 const CLASS_END = "11:00";
 const OPEN_BEFORE_MIN = 30;
 const CLOSE_AFTER_MIN = 30;
+
+const SESSIONS = [
+  { id: "w1", date: "2026-06-23" },
+  { id: "w2", date: "2026-06-30" },
+  { id: "w3", date: "2026-07-07" },
+  { id: "w4", date: "2026-07-14" },
+  { id: "w5", date: "2026-07-21" },
+  { id: "w7", date: "2026-08-04" },
+  { id: "w8", date: "2026-08-04", start: "16:00", end: "19:00" }, // สัปดาห์ 8 ย้ายมา 4 ส.ค. บ่าย
+  { id: "w10", date: "2026-08-25" },
+  { id: "w11", date: "2026-09-01" },
+  { id: "w12", date: "2026-09-08" },
+  { id: "w13", date: "2026-09-15" },
+  { id: "w14", date: "2026-09-22" },
+  { id: "w15", date: "2026-09-29" },
+  { id: "w17", date: "2026-10-14" },
+];
 
 function doPost(e) {
   const out = (obj) => ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
@@ -55,21 +69,25 @@ function doPost(e) {
 
   const studentId = String(body.studentId || "").trim();
   const deviceId = String(body.deviceId || "").trim();
+  const sessionId = String(body.sessionId || "").trim();
   const lat = Number(body.lat);
   const lng = Number(body.lng);
 
-  if (!/^[0-9]{10}$/.test(studentId) || !deviceId || isNaN(lat) || isNaN(lng)) {
+  if (!/^[0-9]{10}$/.test(studentId) || !deviceId || !sessionId || isNaN(lat) || isNaN(lng)) {
     return out({ status: "error", message: "ข้อมูลไม่ครบถ้วน" });
   }
 
   const now = new Date();
   const todayStr = Utilities.formatDate(now, TIMEZONE, "yyyy-MM-dd");
 
-  if (SESSIONS.indexOf(todayStr) === -1) {
-    return out({ status: "error", message: "วันนี้ไม่ใช่วันเรียนตามตารางเรียน" });
+  const session = SESSIONS.filter(function (s) { return s.id === sessionId; })[0];
+  if (!session) {
+    return out({ status: "error", message: "ไม่พบคาบเรียนนี้ในระบบ" });
   }
-
-  if (!isWithinWindow(now)) {
+  if (session.date !== todayStr) {
+    return out({ status: "error", message: "คาบเรียนนี้ไม่ตรงกับวันนี้ ไม่สามารถเช็คชื่อได้" });
+  }
+  if (!isWithinWindow(now, session)) {
     return out({ status: "error", message: "อยู่นอกช่วงเวลาที่เปิดให้เช็คชื่อ" });
   }
 
@@ -97,7 +115,7 @@ function doPost(e) {
   }
   if (attSheet.getLastRow() === 0) {
     attSheet.appendRow([
-      "Timestamp", "Date", "รหัสนิสิต", "ชื่อ-นามสกุล", "DeviceId",
+      "Timestamp", "SessionId", "Date", "รหัสนิสิต", "ชื่อ-นามสกุล", "DeviceId",
       "Lat", "Lng", "AccuracyM", "DistanceM_fromFaculty", "UserAgent",
     ]);
   }
@@ -107,12 +125,12 @@ function doPost(e) {
   try {
     const data = attSheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
-      const rowDate = data[i][1];
-      if (rowDate === todayStr && String(data[i][2]).trim() === studentId) {
-        return out({ status: "error", message: "รหัสนิสิตนี้เช็คชื่อสำหรับวันนี้ไปแล้ว" });
+      const rowSessionId = String(data[i][1]).trim();
+      if (rowSessionId === sessionId && String(data[i][3]).trim() === studentId) {
+        return out({ status: "error", message: "รหัสนิสิตนี้เช็คชื่อสำหรับคาบนี้ไปแล้ว" });
       }
-      if (rowDate === todayStr && String(data[i][4]).trim() === deviceId) {
-        return out({ status: "error", message: "อุปกรณ์นี้ถูกใช้เช็คชื่อสำหรับวันนี้ไปแล้ว" });
+      if (rowSessionId === sessionId && String(data[i][5]).trim() === deviceId) {
+        return out({ status: "error", message: "อุปกรณ์นี้ถูกใช้เช็คชื่อสำหรับคาบนี้ไปแล้ว" });
       }
     }
 
@@ -121,7 +139,7 @@ function doPost(e) {
     const distance = haversineMeters(lat, lng, facultyLat, facultyLng);
 
     attSheet.appendRow([
-      now, todayStr, studentId, studentName, deviceId,
+      now, sessionId, todayStr, studentId, studentName, deviceId,
       lat, lng, Number(body.accuracy) || "", Math.round(distance),
       String(body.userAgent || "").slice(0, 300),
     ]);
@@ -132,9 +150,9 @@ function doPost(e) {
   return out({ status: "ok", name: studentName });
 }
 
-function isWithinWindow(now) {
-  const [ch, cm] = CLASS_START.split(":").map(Number);
-  const [eh, em] = CLASS_END.split(":").map(Number);
+function isWithinWindow(now, session) {
+  const [ch, cm] = (session.start || CLASS_START).split(":").map(Number);
+  const [eh, em] = (session.end || CLASS_END).split(":").map(Number);
 
   const classStart = new Date(now);
   classStart.setHours(ch, cm, 0, 0);
@@ -186,11 +204,12 @@ function doGet(e) {
           .filter((r) => r[1])
           .map((r) => ({
             timestamp: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
-            date: r[1],
-            studentId: String(r[2]).trim(),
-            name: r[3],
-            deviceId: r[4],
-            distance: r[8],
+            sessionId: String(r[1]).trim(),
+            date: r[2],
+            studentId: String(r[3]).trim(),
+            name: r[4],
+            deviceId: r[5],
+            distance: r[9],
           }))
       : [];
 

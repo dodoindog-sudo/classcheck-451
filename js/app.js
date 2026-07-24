@@ -27,24 +27,42 @@ function todayStr() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function findTodaySession() {
-  const t = todayStr();
-  return CONFIG.SESSIONS.find((s) => s.date === t) || null;
+function sessionStart(s) {
+  return s.start || CONFIG.COURSE.classStart;
+}
+function sessionEnd(s) {
+  return s.end || CONFIG.COURSE.classEnd;
+}
+function sessionRoom(s) {
+  return s.room || CONFIG.COURSE.room;
 }
 
-function isWithinCheckinWindow() {
-  const [ch, cm] = CONFIG.COURSE.classStart.split(":").map(Number);
-  const [eh, em] = CONFIG.COURSE.classEnd.split(":").map(Number);
+// คาบเรียนทั้งหมดของวันนี้ เรียงตามเวลาเริ่ม (บางวันมีมากกว่า 1 คาบ)
+function getTodaySessions() {
+  const t = todayStr();
+  return CONFIG.SESSIONS.filter((s) => s.date === t).sort((a, b) =>
+    sessionStart(a).localeCompare(sessionStart(b))
+  );
+}
+
+// ช่วงเวลาที่เปิดให้เช็คชื่อของคาบนั้น ๆ ในวันนี้ (เผื่อก่อน/หลังตาม CHECKIN_WINDOW)
+function windowFor(s) {
+  const [sh, sm] = sessionStart(s).split(":").map(Number);
+  const [eh, em] = sessionEnd(s).split(":").map(Number);
   const now = new Date();
-  const classStart = new Date(now);
-  classStart.setHours(ch, cm, 0, 0);
-  const classEnd = new Date(now);
-  classEnd.setHours(eh, em, 0, 0);
+  const start = new Date(now);
+  start.setHours(sh, sm, 0, 0);
+  const end = new Date(now);
+  end.setHours(eh, em, 0, 0);
+  const open = new Date(start.getTime() - CONFIG.CHECKIN_WINDOW.openBeforeMin * 60000);
+  const close = new Date(end.getTime() + CONFIG.CHECKIN_WINDOW.closeAfterClassEndMin * 60000);
+  return { open, close };
+}
 
-  const openTime = new Date(classStart.getTime() - CONFIG.CHECKIN_WINDOW.openBeforeMin * 60000);
-  const closeTime = new Date(classEnd.getTime() + CONFIG.CHECKIN_WINDOW.closeAfterClassEndMin * 60000);
-
-  return now >= openTime && now <= closeTime;
+function isWithinCheckinWindow(s) {
+  const now = new Date();
+  const w = windowFor(s);
+  return now >= w.open && now <= w.close;
 }
 
 function haversineMeters(lat1, lng1, lat2, lng2) {
@@ -68,12 +86,12 @@ function getDeviceId() {
   return id;
 }
 
-function alreadySubmittedLocally(dateStr) {
-  return localStorage.getItem("crop451_submitted_" + dateStr) === "1";
+function alreadySubmittedLocally(sessionId) {
+  return localStorage.getItem("crop451_submitted_" + sessionId) === "1";
 }
 
-function markSubmittedLocally(dateStr) {
-  localStorage.setItem("crop451_submitted_" + dateStr, "1");
+function markSubmittedLocally(sessionId) {
+  localStorage.setItem("crop451_submitted_" + sessionId, "1");
 }
 
 function renderHeader() {
@@ -96,36 +114,43 @@ function init() {
   renderClock();
   setInterval(renderClock, 1000);
 
-  todaySession = findTodaySession();
+  const todaySessions = getTodaySessions();
 
-  if (!todaySession) {
+  if (todaySessions.length === 0) {
     els.noSession.hidden = false;
     els.gpsSection.hidden = true;
     els.formSection.hidden = true;
     return;
   }
 
-  if (alreadySubmittedLocally(todaySession.date)) {
+  // เลือกคาบที่กำลังเปิดเช็คชื่ออยู่ ถ้าไม่มี ให้เลือกคาบถัดไปที่ยังมาไม่ถึง หรือคาบสุดท้ายของวัน
+  const now = new Date();
+  let active = todaySessions.find((s) => isWithinCheckinWindow(s));
+  if (!active) {
+    active = todaySessions.find((s) => now < windowFor(s).open) || todaySessions[todaySessions.length - 1];
+    todaySession = active;
     els.sessionInfo.hidden = false;
-    els.sessionInfo.innerHTML = renderSessionInfo(todaySession);
+    els.sessionInfo.innerHTML = renderSessionInfo(active);
+    els.noSession.hidden = false;
+    els.noSession.textContent = `วันนี้มีเรียน (คาบ ${sessionStart(active)}–${sessionEnd(active)} น.) แต่ขณะนี้อยู่นอกช่วงเวลาเช็คชื่อ (เปิดเช็คชื่อ ${CONFIG.CHECKIN_WINDOW.openBeforeMin} นาทีก่อนเรียน ถึง ${CONFIG.CHECKIN_WINDOW.closeAfterClassEndMin} นาทีหลังเลิกเรียน)`;
     els.gpsSection.hidden = true;
     els.formSection.hidden = true;
-    showResult("success", "อุปกรณ์นี้เช็คชื่อสำหรับวันนี้ไปแล้ว ✅");
     return;
   }
 
-  if (!isWithinCheckinWindow()) {
+  todaySession = active;
+
+  if (alreadySubmittedLocally(active.id)) {
     els.sessionInfo.hidden = false;
-    els.sessionInfo.innerHTML = renderSessionInfo(todaySession);
-    els.noSession.hidden = false;
-    els.noSession.textContent = `วันนี้มีเรียน แต่ขณะนี้อยู่นอกช่วงเวลาเช็คชื่อ (เปิดเช็คชื่อ ${CONFIG.CHECKIN_WINDOW.openBeforeMin} นาทีก่อนเรียน ถึง ${CONFIG.CHECKIN_WINDOW.closeAfterClassEndMin} นาทีหลังเลิกเรียน)`;
+    els.sessionInfo.innerHTML = renderSessionInfo(active);
     els.gpsSection.hidden = true;
     els.formSection.hidden = true;
+    showResult("success", "อุปกรณ์นี้เช็คชื่อสำหรับคาบนี้ไปแล้ว ✅");
     return;
   }
 
   els.sessionInfo.hidden = false;
-  els.sessionInfo.innerHTML = renderSessionInfo(todaySession);
+  els.sessionInfo.innerHTML = renderSessionInfo(active);
   els.gpsSection.hidden = false;
 }
 
@@ -134,6 +159,7 @@ function renderSessionInfo(s) {
     <div class="session-week">สัปดาห์ที่ ${s.week}</div>
     <div class="session-topic">${s.topic}</div>
     <div class="session-instructor">ผู้สอน: ${s.instructor}</div>
+    <div class="session-instructor">เวลา ${sessionStart(s)}–${sessionEnd(s)} น. · ${sessionRoom(s)}</div>
   </div>`;
 }
 
@@ -206,6 +232,7 @@ async function submitAttendance() {
   const payload = {
     token: CONFIG.API_TOKEN,
     studentId,
+    sessionId: todaySession.id,
     date: todaySession.date,
     deviceId: getDeviceId(),
     lat: currentPosition.lat,
@@ -224,7 +251,7 @@ async function submitAttendance() {
     const data = await res.json();
 
     if (data.status === "ok") {
-      markSubmittedLocally(todaySession.date);
+      markSubmittedLocally(todaySession.id);
       showResult("success", `บันทึกการเข้าเรียนสำเร็จ ✅ (${data.name || ""})`);
       els.formSection.hidden = true;
       els.gpsSection.hidden = true;

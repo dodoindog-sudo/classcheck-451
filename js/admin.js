@@ -61,10 +61,15 @@ function shortDate(iso) {
   return `${d}/${m}`;
 }
 
+function sessionTimeLabel(s) {
+  return s.start ? `${s.start}–${s.end || ""}` : "";
+}
+
 function render() {
   const sessions = CONFIG.SESSIONS;
 
-  const presentSet = new Set(attendance.map((a) => `${a.date}|${a.studentId}`));
+  // แยกการเข้าเรียนด้วย sessionId (บางวันมีมากกว่า 1 คาบ)
+  const presentSet = new Set(attendance.map((a) => `${a.sessionId}|${a.studentId}`));
 
   // summary
   const totalCheckins = attendance.length;
@@ -72,7 +77,7 @@ function render() {
   aEls.summaryCard.innerHTML = `
     <div class="summary-grid">
       <div class="summary-stat"><div class="num">${roster.length}</div><div class="lbl">นิสิตทั้งหมด</div></div>
-      <div class="summary-stat"><div class="num">${sessions.length}</div><div class="lbl">วันเรียนในระบบ</div></div>
+      <div class="summary-stat"><div class="num">${sessions.length}</div><div class="lbl">คาบเรียนในระบบ</div></div>
       <div class="summary-stat"><div class="num">${totalCheckins}</div><div class="lbl">การเช็คชื่อทั้งหมด</div></div>
       <div class="summary-stat"><div class="num">${uniqueStudentsPresent}</div><div class="lbl">นิสิตที่เคยเช็คชื่อ</div></div>
     </div>
@@ -80,7 +85,10 @@ function render() {
 
   // table
   let thead = `<tr><th class="name-cell">รหัส / ชื่อ-นามสกุล</th>`;
-  sessions.forEach((s) => (thead += `<th title="${s.topic}">สัปดาห์ ${s.week}<br>${shortDate(s.date)}</th>`));
+  sessions.forEach((s) => {
+    const time = sessionTimeLabel(s);
+    thead += `<th title="${s.topic}">สัปดาห์ ${s.week}<br>${shortDate(s.date)}${time ? "<br>" + time : ""}</th>`;
+  });
   thead += `<th>มา</th><th>%</th></tr>`;
 
   const sortedRoster = [...roster].sort((a, b) => a.id.localeCompare(b.id));
@@ -90,7 +98,7 @@ function render() {
     let presentCount = 0;
     let cells = "";
     sessions.forEach((s) => {
-      const present = presentSet.has(`${s.date}|${stu.id}`);
+      const present = presentSet.has(`${s.id}|${stu.id}`);
       if (present) presentCount++;
       cells += `<td class="${present ? "present" : "absent"}">${present ? "✓" : "-"}</td>`;
     });
@@ -103,9 +111,9 @@ function render() {
 }
 
 function exportCsv() {
-  const header = "Timestamp,Date,StudentId,Name,DeviceId,DistanceM\n";
+  const header = "Timestamp,SessionId,Date,StudentId,Name,DeviceId,DistanceM\n";
   const rows = attendance
-    .map((a) => [a.timestamp, a.date, a.studentId, `"${a.name}"`, a.deviceId, a.distance].join(","))
+    .map((a) => [a.timestamp, a.sessionId, a.date, a.studentId, `"${a.name}"`, a.deviceId, a.distance].join(","))
     .join("\n");
   const blob = new Blob(["﻿" + header + rows], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
